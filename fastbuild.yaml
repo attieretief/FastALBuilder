@@ -1,0 +1,39 @@
+name: Build/Deliver
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths-ignore: 
+      - '.github/**'
+      - 'resources/**'
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'LincRuleSet.json'
+      - '**.md'
+      - '**.yml'
+      - '**.pdf'
+      - '**.html'
+
+jobs:
+  buildApp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: InstallVSCode
+        uses: actions/setup-vscode@v1
+        with:
+          vscode-version: 'latest'
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: AddArtifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build ${{ env.build_number }}
+          path: C:\actions-runner\_work\${{ github.event.repository.name }}\${{ github.event.repository.name }}\*.app
+      - name: NotifyTeams
+        uses: jdcargile/ms-teams-notification@v1.3
+        with:
+          github-token: ${{ github.token }}
+          ms-teams-webhook-uri: ${{ secrets.ORG_MS_TEAMS_WEBHOOK_URI }}
+          notification-summary: ${{ github.event.repository.name }} Build ${{ env.build_number }}
+          notification-color: 28a745

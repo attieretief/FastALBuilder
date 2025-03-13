@@ -1,0 +1,47 @@
+name: Build/Deliver
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths-ignore: 
+      - '.github/**'
+      - 'resources/**'
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'LincRuleSet.json'
+      - '**.md'
+      - '**.yml'
+      - '**.pdf'
+      - '**.html'
+
+jobs:
+  buildApp:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
+          C:\Linc-GithubWorkflows\build.ps1 -gitRepoName '${{ github.event.repository.name }}' -BuildType '${{ github.ref }}' -eventName '${{ github.event_name }}' -commit '${{ github.sha }}'
+      - name: AddArtifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build ${{ env.build_number }}
+          path: C:\actions-runner\_work\${{ github.event.repository.name }}\${{ github.event.repository.name }}\*.app
+      - name: NotifyTeams
+        uses: jdcargile/ms-teams-notification@v1.3
+        with:
+          github-token: ${{ github.token }}
+          ms-teams-webhook-uri: ${{ secrets.ORG_MS_TEAMS_WEBHOOK_URI }}
+          notification-summary: ${{ github.event.repository.name }} Build ${{ env.build_number }}
+          notification-color: 28a745
+  deliverApp:
+    needs: buildApp
+    if: ${{ vars.APPSOURCE == 'true' }}
+    runs-on: self-hosted
+    steps:
+      - name: SubmitAppsource
+        run: |
+          C:\Linc-GithubWorkflows\appsource.ps1 -gitRepoName '${{ github.event.repository.name }}'
+
