@@ -24,6 +24,7 @@ jobs:
         with:
           repository: lincza/Linc-Extension-Access
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
       - name: Checkout Code
         uses: actions/checkout@v4
       - name: Setup Python
