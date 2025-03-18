@@ -1,0 +1,44 @@
+name: Build/Deliver
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths-ignore: 
+      - '.github/**'
+      - 'resources/**'
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'LincRuleSet.json'
+      - '**.md'
+      - '**.yml'
+      - '**.pdf'
+      - '**.html'
+
+jobs:
+  buildApp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo to Compile
+        uses: actions/checkout@v4
+        with:
+          repository: lincza/Linc-Extension-Access
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Install python dependencies
+        uses: py-actions/py-dependency-install@v4
+      - name: Install Code Signing Tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osslsigncode
+      - name: Setup AL Compiler
+        run: |
+          python src/getAL.py
+      - name: Build AL Extension(s)
+        run: |
+          python src/build.py -r lincza/Linc-Extension-Access -e push -c 1234567
