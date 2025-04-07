@@ -176,21 +176,26 @@ def process_app_file(
                 # Sign the app file
                 print(f"Signing {out_file}...")
                 source = out_file
-                pfx_file = os.environ.get("AZ_CERT_FILENAME")
-                password = os.environ.get("CERT_PASSWORD")
 
+                # azuresigntool sign -kvu [vault uri] -kvc [certificate name] -kvi [application id] -kvs [secret] -kvt [tenant id] -tr http://timestamp.digicert.com -v [filename.exe]
                 sign_cmd = [
-                    "osslsigncode",
+                    "azuresigntool",
                     "sign",
-                    "-pkcs12",
-                    pfx_file,
-                    "-pass",
-                    password,
-                    "-out",
-                    source.replace("_unsigned", ""),
+                    "-kvu",
+                    os.environ.get("AZURE_KEY_VAULT_URI"),
+                    "-kvc",
+                    os.environ.get("AZURE_KEY_VAULT_CERTIFICATE_NAME"),
+                    "-kvi",
+                    os.environ.get("AZURE_KEY_VAULT_APPLICATION_ID"),
+                    "-kvs",
+                    os.environ.get("AZURE_KEY_VAULT_APPLICATION_SECRET"),
+                    "-kvt",
+                    os.environ.get("AZURE_KEY_VAULT_TENANT_ID"),
+                    "-tr",
+                    "http://timestamp.digicert.com",
+                    "-v",
                     source,
                 ]
-                # osslsigncode sign -pkcs12 mycertificate.pfx -pass mypassword -out signed_app.exe app.exe
                 signprocess = subprocess.run(sign_cmd, stdout=subprocess.DEVNULL)
 
                 # Check if signing was successful

@@ -15,12 +15,22 @@ inputs:
   al_blob_name:
     description: 'AL Compiler Blob Name'
     required: true
-  pfx_file:
-    description: 'PFX File Name'
+  azure_key_vault_uri:
+    description: 'Azure Key Vault URI'
     required: true
-  password:
-    description: 'PFX Password'
+  azure_key_vault_certificate_name:
+    description: 'Azure Key Vault Certificate Name'
     required: true
+  azure_key_vault_application_id:
+    description: 'Azure Key Vault Application ID'
+    required: true
+  azure_key_vault_application_secret:
+    description: 'Azure Key Vault Application Secret'
+    required: true
+  azure_key_vault_tenant_id:
+    description: 'Azure Key Vault Tenant ID'
+    required: true
+
   
 runs:
   using: 'composite'
@@ -38,13 +48,24 @@ runs:
         sudo apt-get update
         sudo apt-get install -y osslsigncode
       shell: bash
+    - name: Install dotnet Framework
+      uses: actions/setup-dotnet@v4
+    - name: Install AzureSignTool
+      run: |
+        mkdir -p $HOME/.dotnet/tools
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        dotnet tool install -g AzureSignTool
+      shell: bash
     - name: Pass Inputs to Shell Environment Variables
       run: |
         echo "export AZ_CONNECTION_STRING='${{ inputs.azure_connection_string }}'" >> $GITHUB_ENV
         echo "export AZ_CONTAINER_NAME_TOOLS='${{ inputs.container_name }}'" >> $GITHUB_ENV
         echo "export AZ_ALC_FILENAME='${{ inputs.al_blob_name }}'" >> $GITHUB_ENV
-        echo "export AZ_CERT_FILENAME='${{ inputs.pfx_file }}'" >> $GITHUB_ENV
-        echo "export CERT_PASSWORD='${{ inputs.password }}'" >> $GITHUB_ENV
+        echo "export AZ_KEY_VAULT_URI='${{ inputs.azure_key_vault_uri }}'" >> $GITHUB_ENV
+        echo "export AZ_KEY_VAULT_CERTIFICATE_NAME='${{ inputs.azure_key_vault_certificate_name }}'" >> $GITHUB_ENV
+        echo "export AZ_KEY_VAULT_APPLICATION_ID='${{ inputs.azure_key_vault_application_id }}'" >> $GITHUB_ENV
+        echo "export AZ_KEY_VAULT_APPLICATION_SECRET='${{ inputs.azure_key_vault_application_secret }}'" >> $GITHUB_ENV
+        echo "export AZ_KEY_VAULT_TENANT_ID='${{ inputs.azure_key_vault_tenant_id }}'" >> $GITHUB_ENV
       shell: bash
     - name: Setup AL Compiler
       run: |
