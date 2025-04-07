@@ -1,0 +1,1 @@
+GitHub Action to perform fast builds, code signing and AppSource submissions of Business Central AL Extension Apps
