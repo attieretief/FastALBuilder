@@ -78,6 +78,7 @@ def get_symbols(application_major, app_dependencies: dict):
             if symbol_name(app_dependencies["name"]) in symbol_name(blob.name):
                 download_blob(blob_container_client, blob.name, DownloadPathDestination)
 
+    print(f"Download complete. Symbols in folder: {DownloadPathDestination}")
     return DownloadPathDestination
 
 
@@ -152,8 +153,11 @@ def process_app_file(
     symbols_location = get_symbols(application_major, app_dependencies)
 
     # Run AL compiler
-    alc_path = os.path.join(".", "alc", "extension", "bin", "linux", "alc")
-    if os.path.exists(alc_path):
+    alc_path = os.path.join("..", "alc", "linux", "alc")
+    if not os.path.exists(alc_path):
+        print(f"ALC not found at {alc_path}")
+        sys.exit(1)
+    else:
         cmd = [
             alc_path,
             f"/packagecachepath:{symbols_location}",
@@ -167,6 +171,7 @@ def process_app_file(
         ]
 
         # Run AL compiler
+        print(f"Running ALC with command: {' '.join(cmd)}")
         process = subprocess.run(cmd)
 
         # Check if build was successful
@@ -196,7 +201,10 @@ def process_app_file(
                     "-v",
                     source,
                 ]
-                signprocess = subprocess.run(sign_cmd, stdout=subprocess.DEVNULL)
+
+                # Run the signing command
+                print(f"Running signing command: {' '.join(sign_cmd)}")
+                signprocess = subprocess.run(sign_cmd)
 
                 # Check if signing was successful
                 if signprocess.returncode != 0:
@@ -263,16 +271,33 @@ def main():
     event_name = args.event
     commit = args.commit
 
-    # Load environment variables
-    dotenv.load_dotenv()
-
     # Find files of pattern *app.json and iterate over them
     if os.environ.get("WORK_PATH"):
         work_path = os.environ.get("WORK_PATH")
     else:
         work_path = os.getcwd()
     print(f"Working path: {work_path}")
-    app_json_files = list(Path(work_path).glob("*app.json"))
+
+    # Load environment variables
+    dotenv.load_dotenv()
+    # Check if the required environment variables are set
+    required_vars = [
+        "AZ_CONNECTION_STRING",
+        "AZ_CONTAINER_NAME_MSSYMBOLS",
+        "AZ_CONTAINER_NAME_DEPENDENCIES",
+        "AZURE_KEY_VAULT_URI",
+        "AZURE_KEY_VAULT_CERTIFICATE_NAME",
+        "AZURE_KEY_VAULT_APPLICATION_ID",
+        "AZURE_KEY_VAULT_APPLICATION_SECRET",
+        "AZURE_KEY_VAULT_TENANT_ID",
+    ]
+    for var in required_vars:
+        if not os.getenv(var):
+            print(f"Missing environment variable: {var}")
+            sys.exit(1)
+    print("All required environment variables are set")
+
+    app_json_files = list(Path(work_path).glob("app.json"))
 
     if not app_json_files:
         print("No app.json files found in the current directory")

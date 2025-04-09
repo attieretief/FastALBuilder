@@ -35,24 +35,16 @@ def download_AL():  # Download URL for ALC portable:
     connection_string = os.getenv("AZ_CONNECTION_STRING")
     container_name = os.getenv("AZ_CONTAINER_NAME_TOOLS")
     al_blob_name = os.getenv("AZ_ALC_FILENAME")
-    cert_blob_name = os.getenv("AZ_CERT_FILENAME")
 
     print("Downloading AL Compiler from Azure Storage...")
 
     # Create the download destination
-    DownloadPathDestination = os.path.join(os.getcwd(), "alc")
+    DownloadPathDestination = "../alc"
     if not os.path.exists(DownloadPathDestination):
         os.mkdir(DownloadPathDestination)
 
     # Download from Azure Blob Storage
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-
-    # Download Certificate
-    cert_blob_client = blob_service_client.get_blob_client(
-        container=container_name, blob=cert_blob_name
-    )
-    DownloadCertDestination = os.path.join(DownloadPathDestination, cert_blob_name)
-    DownloadBlob(cert_blob_client, cert_blob_name, DownloadCertDestination)
 
     # Download ALC
     blob_client = blob_service_client.get_blob_client(
@@ -66,10 +58,10 @@ def download_AL():  # Download URL for ALC portable:
         zip_ref.extractall(DownloadPathDestination)
     os.remove(DownloadZipDestination)
 
-    chmod_path = os.path.join(DownloadPathDestination, "extension/bin/linux/alc")
+    chmod_path = os.path.join(DownloadPathDestination, "linux/alc")
     os.chmod(chmod_path, 0o755)
 
-    return os.path.join(DownloadPathDestination, "extension/bin/linux/")
+    return os.path.join(DownloadPathDestination, "linux/")
 
 
 if __name__ == "__main__":

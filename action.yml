@@ -35,17 +35,14 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
     - name: Install python dependencies
       uses: py-actions/py-dependency-install@v4
-    - name: Install Code Signing Tool
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y osslsigncode
-      shell: bash
     - name: Install dotnet Framework
       uses: actions/setup-dotnet@v4
     - name: Install AzureSignTool
