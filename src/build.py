@@ -184,7 +184,7 @@ def process_app_file(
 
                 # azuresigntool sign -kvu [vault uri] -kvc [certificate name] -kvi [application id] -kvs [secret] -kvt [tenant id] -tr http://timestamp.digicert.com -v [filename.exe]
                 sign_cmd = [
-                    "azuresigntool",
+                    "/root/.dotnet/tools/azuresigntool",
                     "sign",
                     "-kvu",
                     os.environ.get("AZ_KEY_VAULT_URI"),
@@ -271,13 +271,6 @@ def main():
     event_name = args.event
     commit = args.commit
 
-    # Find files of pattern *app.json and iterate over them
-    if os.environ.get("WORK_PATH"):
-        work_path = os.environ.get("WORK_PATH")
-    else:
-        work_path = os.getcwd()
-    print(f"Working path: {work_path}")
-
     # Load environment variables
     dotenv.load_dotenv()
     # Check if the required environment variables are set
@@ -297,6 +290,10 @@ def main():
             sys.exit(1)
     print("All required environment variables are set")
 
+    work_path = os.path.join(os.getcwd(), repo_name)
+    if not os.path.exists(work_path):
+        print(f"Repository path does not exist: {work_path}")
+        sys.exit(1)
     app_json_files = list(Path(work_path).glob("app.json"))
 
     if not app_json_files:

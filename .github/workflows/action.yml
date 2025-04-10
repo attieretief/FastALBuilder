@@ -39,9 +39,8 @@ jobs:
           dotnet-version: '8.0'
       - name: Install AzureSignTool
         run: |
-          mkdir -p $HOME/.dotnet/tools
-          export PATH="$PATH:$HOME/.dotnet/tools"
           dotnet tool install -g AzureSignTool
+          export PATH="$PATH:/root/.dotnet/tools"
         shell: bash
       - name: Setup AL Compiler
         run: |
