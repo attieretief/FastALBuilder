@@ -9,8 +9,14 @@ inputs:
   azure_connection_string:
     description: 'Azure Storage Account Connection String'
     required: true
-  container_name:
+  container_name_tools:
     description: 'Azure Storage Account Container Name'
+    required: true
+  container_name_mssymbols:
+    description: 'Azure Storage Account Container Name for MS Symbols'
+    required: true
+  container_name_dependencies:
+    description: 'Azure Storage Account Container Name for Dependencies'
     required: true
   al_blob_name:
     description: 'AL Compiler Blob Name'
@@ -35,8 +41,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout Code
+    - name: Checkout Repo to Compile
       uses: actions/checkout@v4
+      with:
+        path: ${{ github.event.repository.name }}
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
@@ -44,18 +52,21 @@ runs:
     - name: Install python dependencies
       uses: py-actions/py-dependency-install@v4
     - name: Install dotnet Framework
+      with:
+        dotnet-version: '8.0'    
       uses: actions/setup-dotnet@v4
     - name: Install AzureSignTool
       run: |
-        mkdir -p $HOME/.dotnet/tools
-        export PATH="$PATH:$HOME/.dotnet/tools"
         dotnet tool install -g AzureSignTool
+        export PATH="$PATH:/root/.dotnet/tools"
       shell: bash
     - name: Pass Inputs to Shell Environment Variables
       run: |
         echo "export AZ_CONNECTION_STRING='${{ inputs.azure_connection_string }}'" >> $GITHUB_ENV
-        echo "export AZ_CONTAINER_NAME_TOOLS='${{ inputs.container_name }}'" >> $GITHUB_ENV
-        echo "export AZ_ALC_FILENAME='${{ inputs.al_blob_name }}'" >> $GITHUB_ENV
+        echo "export AZ_CONTAINER_NAME_TOOLS='${{ inputs.container_name_tools }}'" >> $GITHUB_ENV
+        echo "export AZ_CONTAINER_NAME_MSSYMBOLS"='${{ inputs.container_name_mssymbols }}'" >> $GITHUB_ENV
+        echo "export AZ_CONTAINER_NAME_DEPENDENCIES"='${{ inputs.container_name_dependencies }}'" >> $GITHUB_ENV
+        echo "export AZ_ALC_FILENAME='${{ inputs.al_blob_name }}'" >> $GITHUB_ENV        
         echo "export AZ_KEY_VAULT_URI='${{ inputs.azure_key_vault_uri }}'" >> $GITHUB_ENV
         echo "export AZ_KEY_VAULT_CERTIFICATE_NAME='${{ inputs.azure_key_vault_certificate_name }}'" >> $GITHUB_ENV
         echo "export AZ_KEY_VAULT_APPLICATION_ID='${{ inputs.azure_key_vault_application_id }}'" >> $GITHUB_ENV
@@ -68,5 +79,5 @@ runs:
       shell: bash
     - name: Build AL Extension(s)
       run: |
-        python src/build.py -r '${{ github.event.repository.name }}' -e  '${{ github.event_name }}' -c '${{ github.sha }}'
+        python src/build.py -r '${{ github.event.repository.name }}' -e '${{ github.event_name }}' -c '${{ github.sha }}'
       shell: bash
