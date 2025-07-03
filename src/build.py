@@ -182,23 +182,29 @@ def process_app_file(
                 print(f"Signing {out_file}...")
                 source = out_file
 
-                # azuresigntool sign -kvu [vault uri] -kvc [certificate name] -kvi [application id] -kvs [secret] -kvt [tenant id] -tr http://timestamp.digicert.com -v [filename.exe]
+                # set environment variables for azure-code-signer
+                set_env = {
+                    "AZURE_TENANT_ID": os.environ.get("AZ_KEY_VAULT_TENANT_ID"),
+                    "AZURE_CLIENT_ID": os.environ.get("AZ_KEY_VAULT_APPLICATION_ID"),
+                    "AZURE_CLIENT_SECRET": os.environ.get(
+                        "AZ_KEY_VAULT_APPLICATION_SECRET"
+                    ),
+                }
+                for key, value in set_env.items():
+                    if value is None:
+                        print(f"Missing environment variable: {key}")
+                        sys.exit(1)
+                    else:
+                        os.environ[key] = value
+                # Create the signing command
+                # azure-code-signer --vault-url https://linccodesigning.vault.azure.net/ --cert-name DigiCertCodeSigning --file LincAdvancedPricing_24.25.1891.1056_3c28118.app
                 sign_cmd = [
-                    "/root/.dotnet/tools/azuresigntool",
-                    "sign",
-                    "-kvu",
+                    "azure-code-signer",
+                    "--vault-url",
                     os.environ.get("AZ_KEY_VAULT_URI"),
-                    "-kvc",
+                    "--cert-name",
                     os.environ.get("AZ_KEY_VAULT_CERTIFICATE_NAME"),
-                    "-kvi",
-                    os.environ.get("AZ_KEY_VAULT_APPLICATION_ID"),
-                    "-kvs",
-                    os.environ.get("AZ_KEY_VAULT_APPLICATION_SECRET"),
-                    "-kvt",
-                    os.environ.get("AZ_KEY_VAULT_TENANT_ID"),
-                    "-tr",
-                    "http://timestamp.digicert.com",
-                    "-v",
+                    "--file",
                     source,
                 ]
 
@@ -211,6 +217,7 @@ def process_app_file(
                     print(f"Error signing {out_file}")
                     sys.exit(1)
                 else:
+                    signed_file = source
                     # Upload the app file to Azure Blob Storage
                     connection_string = os.getenv("AZ_CONNECTION_STRING")
                     container_name = os.getenv("AZ_CONTAINER_NAME_DEPENDENCIES")
@@ -223,7 +230,7 @@ def process_app_file(
                     blob_client = blob_service_client.get_blob_client(
                         container=container_name, blob=blob_name
                     )
-                    with open(source, "rb") as data:
+                    with open(signed_file, "rb") as data:
                         blob_client.upload_blob(data, overwrite=True)
                     # Set GitHub environment variable for build number
                     build_number = f"{out_version}_{commit[:7]}"

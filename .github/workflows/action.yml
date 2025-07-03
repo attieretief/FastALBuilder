@@ -33,15 +33,6 @@ jobs:
           python-version: '3.12'
       - name: Install python dependencies
         uses: py-actions/py-dependency-install@v4
-      - name: Install dotnet Framework
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0'
-      - name: Install AzureSignTool
-        run: |
-          dotnet tool install -g AzureSignTool
-          export PATH="$PATH:/root/.dotnet/tools"
-        shell: bash
       - name: Setup AL Compiler
         run: |
           python src/getAL.py

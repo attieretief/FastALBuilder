@@ -45,28 +45,21 @@ runs:
       uses: actions/checkout@v4
       with:
         path: ${{ github.event.repository.name }}
+    - name: Checkout Code
+      uses: actions/checkout@v4
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
     - name: Install python dependencies
       uses: py-actions/py-dependency-install@v4
-    - name: Install dotnet Framework
-      with:
-        dotnet-version: '8.0'    
-      uses: actions/setup-dotnet@v4
-    - name: Install AzureSignTool
-      run: |
-        dotnet tool install -g AzureSignTool
-        export PATH="$PATH:/root/.dotnet/tools"
-      shell: bash
     - name: Pass Inputs to Shell Environment Variables
       run: |
         echo "export AZ_CONNECTION_STRING='${{ inputs.azure_connection_string }}'" >> $GITHUB_ENV
         echo "export AZ_CONTAINER_NAME_TOOLS='${{ inputs.container_name_tools }}'" >> $GITHUB_ENV
         echo "export AZ_CONTAINER_NAME_MSSYMBOLS"='${{ inputs.container_name_mssymbols }}'" >> $GITHUB_ENV
         echo "export AZ_CONTAINER_NAME_DEPENDENCIES"='${{ inputs.container_name_dependencies }}'" >> $GITHUB_ENV
-        echo "export AZ_ALC_FILENAME='${{ inputs.al_blob_name }}'" >> $GITHUB_ENV        
+        echo "export AZ_ALC_FILENAME='${{ inputs.al_blob_name }}'" >> $GITHUB_ENV
         echo "export AZ_KEY_VAULT_URI='${{ inputs.azure_key_vault_uri }}'" >> $GITHUB_ENV
         echo "export AZ_KEY_VAULT_CERTIFICATE_NAME='${{ inputs.azure_key_vault_certificate_name }}'" >> $GITHUB_ENV
         echo "export AZ_KEY_VAULT_APPLICATION_ID='${{ inputs.azure_key_vault_application_id }}'" >> $GITHUB_ENV
